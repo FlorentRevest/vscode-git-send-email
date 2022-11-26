@@ -1,0 +1,83 @@
+header {
+  margin-top: 1px;
+}
+
+h4 {
+  margin: 3px 0;
+}
+
+#flexbox {
+  display: flex;
+}
+
+.max-width {
+  width: 100%;
+}
+
+#version-wrapper {
+  margin-left: 5px;
+}
+
+#version-dropdown {
+  min-width: 0px;
+}
+
+#cover-letter-wrapper {
+  cursor: pointer;
+}
+
+#cover-letter {
+  pointer-events: none;
+}
+
+ul {
+  padding: 0;
+  margin: 5px 0 15px 0;
+  list-style: none;
+}
+
+ul li::before {
+  content: "\2022";
+  color: var(--foreground);
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em;
+}
+
+li {
+  min-height: 16px;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.remove-email {
+  --button-icon-padding: 0;
+}
+
+.float-right {
+  float: right;
+}
+
+label {
+  color: var(--foreground);
+  display: block;
+  margin-bottom: 2px;
+}
+
+vscode-divider {
+  margin: 10px 0;
+}
+
+:host([disabled]) .label,
+:host([readonly]) .label,
+:host([readonly]) .control,
+:host([disabled]) .control {
+  cursor: pointer;
+}
+
+#send-button {
+  margin-top: 20px;
+  width: 100%;
+}

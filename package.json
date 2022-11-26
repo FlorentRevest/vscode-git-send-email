@@ -1,0 +1,138 @@
+{
+  "name": "git-send-email",
+  "displayName": "Git send-email",
+  "description": "Git send-email integration",
+  "publisher": "florent-revest",
+  "license": "MIT",
+  "icon": "icon.png",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FlorentRevest/vscode-git-send-email.git"
+  },
+  "engines": {
+    "vscode": "^1.59.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:git-send-email.series"
+  ],
+  "main": "./out/src/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "git-send-email",
+          "title": "Git send-email",
+          "icon": "$(mail)"
+        }
+      ]
+    },
+    "views": {
+      "git-send-email": [
+        {
+          "id": "git-send-email.series",
+          "name": "",
+          "type": "webview",
+          "when": "git.state == initialized"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "git-send-email.series",
+        "contents": "Loading..."
+      }
+    ],
+    "configuration": {
+      "title": "Git send-email",
+      "properties": {
+        "git-send-email.defaultSubjectPrefix": {
+          "type": "string",
+          "default": "PATCH",
+          "description": "Default subject prefix."
+        },
+        "git-send-email.defaultTos": {
+          "type": "array",
+          "default": [],
+          "description": "Default list of emails to pre-fill the To section."
+        },
+        "git-send-email.defaultCcs": {
+          "type": "array",
+          "default": [],
+          "description": "Default list of emails to pre-fill the Cc section."
+        },
+        "git-send-email.gitPath": {
+          "type": "string",
+          "default": "git",
+          "description": "Command to invoke git."
+        },
+        "git-send-email.checkpatchPath": {
+          "type": "string",
+          "default": "./scripts/checkpatch.pl",
+          "description": "Command to invoke checkpatch."
+        },
+        "git-send-email.getMaintainerPath": {
+          "type": "string",
+          "default": "./scripts/get_maintainer.pl",
+          "description": "Command to invoke get_maintainer."
+        },
+        "git-send-email.maintainersPath": {
+          "type": "string",
+          "default": "MAINTAINERS",
+          "description": "Relative path to the MAINTAINERS file."
+        },
+        "git-send-email.getMaintainerToArgs": {
+          "type": "array",
+          "default": ["--no-m", "--no-r", "--no-git-fallback"],
+          "description": "Arguments to get_maintainer to filter only To addresses."
+        },
+        "git-send-email.getMaintainerCcArgs": {
+          "type": "array",
+          "default": ["--no-l"],
+          "description": "Arguments to get_maintainer to filter only Cc addresses."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "npm-run-all compile:*",
+    "compile:extension": "tsc -p ./",
+    "compile:view": "webpack --mode development",
+    "watch": "npm-run-all -p watch:*",
+    "watch:extension": "tsc -watch -p ./",
+    "watch:view": "webpack --watch --mode development",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@types/node": "^12.11.7",
+    "@types/react": "^17.0.1",
+    "@types/react-dom": "^17.0.0",
+    "@types/uuid": "^8.3.1",
+    "@types/vscode": "^1.59.0",
+    "@typescript-eslint/eslint-plugin": "^4.14.1",
+    "@typescript-eslint/parser": "^4.14.1",
+    "css-loader": "^5.0.1",
+    "eslint": "^7.19.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "glob": "^7.1.6",
+    "npm-run-all": "^4.1.5",
+    "style-loader": "^2.0.0",
+    "ts-loader": "^8.0.15",
+    "typescript": "^4.8.2",
+    "vscode-test": "^1.5.0",
+    "webpack": "^5.21.1",
+    "webpack-cli": "^4.5.0"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.32",
+    "@vscode/webview-ui-toolkit": "^1.0.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  }
+}
