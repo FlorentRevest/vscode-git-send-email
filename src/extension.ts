@@ -11,7 +11,7 @@ import { getSeries, saveSeries, getCoverLetter, saveCoverLetter } from "./utilit
 import { workspaceHasFile } from "./utilities/workspace";
 import { getUri } from "./utilities/getUri";
 import * as vscode from "vscode";
-import { GitExtension, Repository } from "./api/git";
+import { API, GitExtension, Repository } from "./api/git";
 import { Series } from "./Series";
 import { CoverLetterFs } from "./CoverLetterFs";
 
@@ -365,11 +365,27 @@ export async function activate(context: ExtensionContext) {
   if (gitExtension) {
     gitExtension.activate().then(async (extension: any) => {
       let updateRepo = async () => {
-        let repo = git.repositories[0];
-        await seriesProvider.setRepo(repo);
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+
+        if (!workspaceFolders || !workspaceFolders.length) {
+          await seriesProvider.setRepo(undefined);
+          return;
+        }
+
+        if (workspaceFolders.length > 1) {
+          vscode.window.showErrorMessage("You use a multi-folders workspace. Git send-email might pick the wrong folder and fail in unexpected ways.");
+          return;
+        }
+
+        let repo = git.getRepository(workspaceFolders[0].uri);
+        if (repo) {
+          await seriesProvider.setRepo(repo);
+        } else {
+          await seriesProvider.setRepo(undefined);
+        }
       };
 
-      let git = extension.getAPI(1);
+      let git: API = extension.getAPI(1);
       git.onDidOpenRepository(updateRepo);
       git.onDidCloseRepository(updateRepo);
 
