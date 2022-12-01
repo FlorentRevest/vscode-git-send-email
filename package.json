@@ -84,6 +84,11 @@
           "default": "MAINTAINERS",
           "description": "Relative path to the MAINTAINERS file."
         },
+        "git-send-email.formatPatchArgs": {
+          "type": "array",
+          "default": ["--signoff"],
+          "description": "Extra arguments to git format-patch."
+        },
         "git-send-email.getMaintainerToArgs": {
           "type": "array",
           "default": ["--no-m", "--no-r", "--no-git-fallback"],

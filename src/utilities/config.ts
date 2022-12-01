@@ -36,3 +36,6 @@ export function getMaintainerToArgs(): string[] {
 export function getMaintainerCcArgs(): string[] {
   return getStringArray("getMaintainerCcArgs");
 }
+export function getFormatPatchArgs(): string[] {
+  return getStringArray("formatPatchArgs");
+}

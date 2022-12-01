@@ -2,7 +2,7 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import { Series } from "../Series";
 import * as vscode from "vscode";
-import { getMaintainerPath } from "./config";
+import { getFormatPatchArgs, getMaintainerPath } from "./config";
 import { gitPath, checkpatchPath, getMaintainerToArgs, getMaintainerCcArgs } from "./config";
 
 // Convenience function to run a command in the current workspace
@@ -32,6 +32,7 @@ export async function runCommand(
 export async function gitFormatPatch(series: Series, coverLetter: string): Promise<string[]> {
   let args: string[] = [];
   args.push("format-patch");
+  args = args.concat(getFormatPatchArgs());
   args.push("HEAD" + "~".repeat(series.nbPatches));
 
   let outDir = "/tmp/vscode-git-format-patch-" + Math.random().toString(36).slice(-5) + "/";
