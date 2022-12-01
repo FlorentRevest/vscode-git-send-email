@@ -84,6 +84,11 @@
           "default": "MAINTAINERS",
           "description": "Relative path to the MAINTAINERS file."
         },
+        "git-send-email.postFormatPatchCommand": {
+          "type": "array",
+          "default": ["sed", "-i", "/^Change-Id: /d"],
+          "description": "Command executed after patches are generated. It will be followed by all patch paths as arguments. e.g: cmd /tmp/cover-letter.patch /tmp/1.patch"
+        },
         "git-send-email.formatPatchArgs": {
           "type": "array",
           "default": ["--signoff"],

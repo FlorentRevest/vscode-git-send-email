@@ -3,13 +3,16 @@ import * as fs from "fs";
 import { Series } from "../Series";
 import * as vscode from "vscode";
 import { getFormatPatchArgs, getMaintainerPath } from "./config";
-import { gitPath, checkpatchPath, getMaintainerToArgs, getMaintainerCcArgs } from "./config";
+import {
+  gitPath,
+  checkpatchPath,
+  getMaintainerToArgs,
+  getMaintainerCcArgs,
+  getPostFormatPatchCommand,
+} from "./config";
 
 // Convenience function to run a command in the current workspace
-export async function runCommand(
-  cmd: string,
-  args: string[]
-): Promise<string> {
+export async function runCommand(cmd: string, args: string[]): Promise<string> {
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders || !workspaceFolders.length) {
     vscode.window.showErrorMessage("No root workspace");
@@ -18,11 +21,11 @@ export async function runCommand(
 
   let child = child_process.spawn(cmd, args, { cwd: workspaceFolders[0].uri.path });
   let stdoutChunks: string[] = [];
-  await new Promise( (resolve) => {
-    child.stdout.on('data', function(chunk) {
+  await new Promise((resolve) => {
+    child.stdout.on("data", function (chunk) {
       stdoutChunks.push(chunk.toString());
     });
-    child.on('close', resolve);
+    child.on("close", resolve);
   });
 
   return stdoutChunks.join("");
@@ -58,7 +61,14 @@ export async function gitFormatPatch(series: Series, coverLetter: string): Promi
     fs.writeFileSync(coverLetterPath, data, "utf-8");
   }
 
-  return Array.from(fs.readdirSync(outDir), (f) => outDir + f);
+  let patches = Array.from(fs.readdirSync(outDir), (f) => outDir + f);
+  if (getPostFormatPatchCommand().length) {
+    let postFormatExe = getPostFormatPatchCommand()[0];
+    let postFormatArgs = getPostFormatPatchCommand().slice(1).concat(patches);
+    await runCommand(postFormatExe, postFormatArgs);
+  }
+
+  return patches;
 }
 
 // Returns a command to check the given set of patches
