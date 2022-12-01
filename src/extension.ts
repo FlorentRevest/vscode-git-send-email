@@ -11,7 +11,7 @@ import { getSeries, saveSeries, getCoverLetter, saveCoverLetter } from "./utilit
 import { workspaceHasFile } from "./utilities/workspace";
 import { getUri } from "./utilities/getUri";
 import * as vscode from "vscode";
-import { Commit, GitExtension, Repository } from "./api/git";
+import { GitExtension, Repository } from "./api/git";
 import { Series } from "./Series";
 import { CoverLetterFs } from "./CoverLetterFs";
 
@@ -22,13 +22,11 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
   private _series: Series;
   private _coverLetter: string;
   private _repo?: Repository;
-  private _log: Commit[];
 
   constructor(private _context: ExtensionContext) {
     this._extensionUri = _context.extensionUri;
     this._head = "";
     this._coverLetter = "";
-    this._log = [];
     this._series = getSeries("", _context); // Dummy series
   }
 
@@ -324,7 +322,6 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
 
     if (!headFound) {
       this._head = "";
-      this._log = [];
     }
 
     this._series = getSeries(this._head, this._context);
