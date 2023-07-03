@@ -159,7 +159,7 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
 
     let terminal = vscode.window.createTerminal("checkpatch");
     terminal.show();
-    terminal.sendText(checkpatchCommand(patches), true);
+    setTimeout(() => terminal.sendText(checkpatchCommand(patches), true), 1000);
   }
 
   // Create a series and generate a git send-email command in a terminal
@@ -168,7 +168,7 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
 
     let terminal = vscode.window.createTerminal("git send-email");
     terminal.show();
-    terminal.sendText(sendEmailCommand(this._series, patches), false);
+    setTimeout(() => terminal.sendText(sendEmailCommand(this._series, patches), false), 1000);
   }
 
   // Infer Tos or Ccs using a getMaintainer script
