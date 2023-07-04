@@ -3,7 +3,7 @@ import { ExtensionContext } from "vscode";
 import { defaultCcs, defaultSubjectPrefix, defaultTos } from "./config";
 
 // Associate HEAD to series in a workspace persistent storage
-export function saveSeries(head: string, series: Series, context: ExtensionContext) {
+export function saveSeries(head: string, series: Series | undefined, context: ExtensionContext) {
   if (head.length) {
     context.workspaceState.update("git-send-email:series:" + head, series);
   }
@@ -23,6 +23,17 @@ export function getSeries(head: string, context: ExtensionContext): Series {
     };
   }
   return series;
+}
+
+// Returns all branches tracked in the database
+export function getAllBranches(context: ExtensionContext): Array<string> {
+  let branches: Array<string> = [];
+  context.workspaceState.keys().forEach((key: string) => {
+    if (key.startsWith("git-send-email:series:")) {
+      branches.push(key.substring(22));
+    }
+  });
+  return branches;
 }
 
 // Associate HEAD to coverLetter in a workspace persistent storage

@@ -21,6 +21,14 @@ export const HeaderSection = ({ head, series }: { head: string; series: Series }
             <span className="codicon codicon-empty-window" />
           </VSCodeButton>
         )}
+          <VSCodeButton
+            onClick={(e: any) => {
+              vscode.postMessage({ command: "changeHead" });
+            }}
+            appearance="icon"
+            title="Switch to another branch tracked by git send-email">
+            <span className="codicon codicon-references" />
+          </VSCodeButton>
       </div>
     </header>
   );

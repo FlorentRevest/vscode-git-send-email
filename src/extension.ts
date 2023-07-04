@@ -7,7 +7,7 @@ import {
 } from "./utilities/commands";
 import { sanitizeMaintainersEmail, getPossibleRecipients } from "./utilities/emails";
 import { maintainersPath, getMaintainerPath, checkpatchPath } from "./utilities/config";
-import { getSeries, saveSeries, getCoverLetter, saveCoverLetter } from "./utilities/database";
+import { getSeries, saveSeries, getCoverLetter, saveCoverLetter, getAllBranches } from "./utilities/database";
 import { workspaceHasFile } from "./utilities/workspace";
 import { getUri } from "./utilities/getUri";
 import * as vscode from "vscode";
@@ -75,6 +75,9 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
           break;
         case "inspect":
           this.inspect(message.commitNb);
+          break;
+        case "changeHead":
+          this.changeHead();
           break;
         case "checkpatch":
           this.checkpatch();
@@ -180,6 +183,119 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
       this.addEmail(type, email);
     });
     this.onSeriesChanged();
+  }
+
+  private copyFromSeries(branch: string) {
+    const series = getSeries(branch, this._context);
+    const coverLetter = getCoverLetter(branch, this._context);
+    let input = vscode.window.createQuickPick<vscode.QuickPickItem>();
+    input.placeholder = "Choose what parameters should be copied";
+    input.canSelectMany = true;
+    input.items = [
+      {
+        label: "Prefix",
+        description: series.prefix,
+      },
+      {
+        label: "Version",
+        description: series.version.toString(),
+      },
+      {
+        label: "Cover letter title",
+        description: series.title,
+      },
+      {
+        label: "Cover letter content",
+        description: coverLetter,
+      },
+      {
+        label: "Number of patches",
+        description: series.nbPatches.toString(),
+      },
+      {
+        label: "Ccs",
+        description: series.ccs.join(", "),
+      },
+      {
+        label: "Tos",
+        description: series.tos.join(", "),
+      },
+    ];
+    input.onDidAccept(() => {
+      input.hide();
+      input.selectedItems.forEach((item: vscode.QuickPickItem) => {
+        if (item.label === "Prefix") {
+          this._series.prefix = series.prefix;
+        } else if (item.label === "Version") {
+          this._series.version = series.version;
+        } else if (item.label === "Cover letter title") {
+          this._series.title = series.title;
+        } else if (item.label === "Cover letter content") {
+          saveCoverLetter(this._head, coverLetter, this._context);
+        } else if (item.label === "Number of patches") {
+          this._series.nbPatches = series.nbPatches;
+        } else if (item.label === "Ccs") {
+          this._series.ccs = series.ccs;
+        } else if (item.label === "Tos") {
+          this._series.tos = series.tos;
+        }
+      });
+      if (input.selectedItems.length) {
+        this.onSeriesChanged();
+      }
+    });
+    input.show();
+  }
+
+  // Returns QuickPickItems for each remembered series
+  private existingSeriesItems(): Array<vscode.QuickPickItem> {
+    let ret: Array<vscode.QuickPickItem> = [];
+    getAllBranches(this._context).forEach((branch: string) => {
+      const series = getSeries(branch, this._context);
+      ret = ret.concat({
+        label: branch,
+        description: "[" + series.prefix + " v" + series.version + "] " +  series.title,
+        picked: branch === this._head,
+        buttons: [
+          {
+            iconPath: new vscode.ThemeIcon("trash"),
+            tooltip: "Forget this series",
+          },
+          {
+            iconPath: new vscode.ThemeIcon("copy"),
+            tooltip: "Copy some parameters of this series",
+          },
+        ]
+      });
+    });
+    return ret;
+  }
+
+  // Open a prompt to easily find another series to switch to
+  private changeHead() {
+    let input = vscode.window.createQuickPick<vscode.QuickPickItem>();
+    input.placeholder = "Choose a series by branch name";
+    input.matchOnDescription = true;
+    input.matchOnDetail = true;
+    input.items = this.existingSeriesItems();
+    input.onDidTriggerItemButton(async (e: vscode.QuickPickItemButtonEvent<vscode.QuickPickItem>) => {
+      if (e.button.tooltip?.startsWith("Forget")) {
+        saveSeries(e.item.label, undefined, this._context);
+        input.items = this.existingSeriesItems();
+      } else {
+        input.hide();
+        this.copyFromSeries(e.item.label);
+      }
+    });
+    input.onDidAccept(() => {
+      input.hide();
+
+      let items = input.activeItems;
+      if (items.length) {
+        this._repo?.checkout(items[0].label);
+      }
+    });
+    input.show();
   }
 
   // Copy the current git branch and bump the version number
