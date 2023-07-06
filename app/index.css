@@ -46,6 +46,8 @@ ul li::before {
 
 li {
   min-height: 16px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: calc(var(--vscode-font-size) * 0.9)
 }
 
 .clickable {
