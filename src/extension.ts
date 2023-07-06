@@ -235,17 +235,17 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
   }
 
   private openEmail(messageId: string) {
-    vscode.commands.getCommands(true).then(commands => {
-      const archiveUrl = vscode.Uri.parse(archiveUrlPrefixToMessageId() + messageId);
+    const archiveUrl = vscode.Uri.parse(archiveUrlPrefixToMessageId() + messageId);
 
-      if (openEmailsWithPatchwork() && commands.indexOf("patchwork.open") !== -1) {
-        // If the Patchwork extension is installed, have it open the patch
-        vscode.commands.executeCommand("patchwork.open", messageId, archiveUrl);
-      } else {
-        // And if not, open the link ourselves
-        vscode.commands.executeCommand("vscode.open", archiveUrl);
-      }
-    });
+    if (openEmailsWithPatchwork()) {
+      // If the Patchwork extension is installed, have it open the patch
+      vscode.commands.executeCommand("patchwork.open", messageId, archiveUrl)
+      // Otherwise, fallback to an archive link
+        .then(()=>{}, () => vscode.commands.executeCommand("vscode.open", archiveUrl));
+    } else {
+      // And if disabled by config, also fallback to an archive link
+      vscode.commands.executeCommand("vscode.open", archiveUrl);
+    }
   }
 
   // Infer Tos or Ccs using a getMaintainer script
