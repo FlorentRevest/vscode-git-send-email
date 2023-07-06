@@ -20,6 +20,7 @@ export function getSeries(head: string, context: ExtensionContext): Series {
       ccs: defaultCcs(),
       tos: defaultTos(),
       nbPatches: 1,
+      previouslySent: [],
     };
   }
   return series;

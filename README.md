@@ -17,3 +17,4 @@ This extension integrates VSCode with
 * Switching between branches that hold remembered series
 * Sending series with `git send-email` (ultimately, you get to press the enter
   key if the command and patches looks good to you!)
+* Remembering sent emails and offering links to archives of the conversations

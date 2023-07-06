@@ -84,6 +84,16 @@
           "default": "MAINTAINERS",
           "description": "Relative path to the MAINTAINERS file."
         },
+        "git-send-email.archiveUrlPrefixToMessageId": {
+          "type": "string",
+          "default": "https://lore.kernel.org/r/",
+          "description": "Url prefix that gets prepended to email message IDs to infer an archive address."
+        },
+        "git-send-email.openEmailsWithPatchwork": {
+          "type": "boolean",
+          "default": true,
+          "description": "If the florent-revest.patchwork extension is installed, have it open sent emails."
+        },
         "git-send-email.postFormatPatchCommand": {
           "type": "array",
           "default": [

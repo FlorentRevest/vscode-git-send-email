@@ -7,6 +7,9 @@ function getString(key: string): string {
 function getStringArray(key: string): string[] {
   return vscode.workspace.getConfiguration().get("git-send-email." + key, []);
 }
+function getBoolean(key: string): boolean {
+  return vscode.workspace.getConfiguration().get("git-send-email." + key, false);
+}
 
 // Convenience functions to extract configs
 export function defaultSubjectPrefix(): string {
@@ -29,6 +32,12 @@ export function getMaintainerPath(): string {
 }
 export function maintainersPath(): string {
   return getString("maintainersPath");
+}
+export function archiveUrlPrefixToMessageId(): boolean {
+  return getBoolean("archiveUrlPrefixToMessageId");
+}
+export function openEmailsWithPatchwork(): boolean {
+  return getBoolean("openEmailsWithPatchwork");
 }
 export function getMaintainerToArgs(): string[] {
   return getStringArray("getMaintainerToArgs");

@@ -1,4 +1,6 @@
 import { ExtensionContext } from "vscode";
+import * as child_process from "child_process";
+import * as fs from "fs";
 import {
   gitFormatPatch,
   checkpatchCommand,
@@ -6,7 +8,7 @@ import {
   getMaintainers,
 } from "./utilities/commands";
 import { sanitizeMaintainersEmail, getPossibleRecipients } from "./utilities/emails";
-import { maintainersPath, getMaintainerPath, checkpatchPath } from "./utilities/config";
+import { maintainersPath, getMaintainerPath, checkpatchPath, archiveUrlPrefixToMessageId, openEmailsWithPatchwork } from "./utilities/config";
 import { getSeries, saveSeries, getCoverLetter, saveCoverLetter, getAllBranches } from "./utilities/database";
 import { workspaceHasFile } from "./utilities/workspace";
 import { getUri } from "./utilities/getUri";
@@ -121,6 +123,11 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
             vscode.Uri.parse("cover-letter:///" + this._head)
           );
           break;
+        case "openEmail":
+          this.openEmail(message.messageId);
+          break;
+        case "forgetSentSeries":
+          this.forgetSentSeries(message.number);
       }
     });
   }
@@ -169,9 +176,76 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
   private async send() {
     let patches = await this.gitFormatPatch();
 
-    let terminal = vscode.window.createTerminal("git send-email");
+    // Create a named pipe so we can parse the terminal's logs live
+    let pipe = "/tmp/vscode-git-send-email-" + Math.random().toString(36).slice(-5);
+    child_process.spawnSync('mkfifo', [pipe]);
+
+    // Continuously stream from that pipe
+    let pipeFd = fs.openSync(pipe, fs.constants.O_RDWR);
+    let stream = fs.createReadStream("", {fd: pipeFd, autoClose: false});
+    let inserted = false;
+    stream.on('data', (d: Buffer) => {
+      // Find sent emails in the git send-email terminal output using a regexp
+      var data = d.toString();
+      var messageIdRegexp = new RegExp("^Subject:.+?\] (.+?)\r\n(?:.*?: .+?\r\n)+?Message-ID: <(.+?)>\r\n(?:.*?: .+?\r\n)+?\r\nResult: 250", "gm");
+      var match = messageIdRegexp.exec(data);
+      var foundSend = false;
+
+      while (match !== null) {
+        // Only insert a new sent series once
+        if (!inserted) {
+          inserted = true;
+          this._series.previouslySent = [{
+            timestamp: new Date().toISOString(),
+            prefix: this._series.prefix + " v" + this._series.version,
+            head: this._head,
+            emails: [],
+          }, ...this._series.previouslySent];
+        }
+
+        // Remember every email sent in that element
+        this._series.previouslySent[0].emails.push({
+          title: match[1],
+          messageId: match[2],
+        });
+
+        foundSend = true;
+        match = messageIdRegexp.exec(data);
+      }
+
+      // Update the series panel if we added sent emails
+      if (foundSend) {
+        this.onSeriesChanged();
+      }
+    });
+
+    // Use "script" as a shell to mirror the terminal's stdout into the pipe
+    let terminal = vscode.window.createTerminal({
+      name: "git send-email",
+      shellPath: "/usr/bin/script",
+      shellArgs: ["-f", "-q", pipe],
+    });
     terminal.show();
     setTimeout(() => terminal.sendText(sendEmailCommand(this._series, patches), false), 1000);
+  }
+
+  private forgetSentSeries(i: number) {
+    this._series.previouslySent.splice(i, 1);
+    this.onSeriesChanged();
+  }
+
+  private openEmail(messageId: string) {
+    vscode.commands.getCommands(true).then(commands => {
+      const archiveUrl = vscode.Uri.parse(archiveUrlPrefixToMessageId() + messageId);
+
+      if (openEmailsWithPatchwork() && commands.indexOf("patchwork.open") !== -1) {
+        // If the Patchwork extension is installed, have it open the patch
+        vscode.commands.executeCommand("patchwork.open", messageId, archiveUrl);
+      } else {
+        // And if not, open the link ourselves
+        vscode.commands.executeCommand("vscode.open", archiveUrl);
+      }
+    });
   }
 
   // Infer Tos or Ccs using a getMaintainer script
@@ -220,6 +294,10 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
         label: "Tos",
         description: series.tos.join(", "),
       },
+      {
+        label: "Sent emails",
+        description: series.previouslySent.length + " series",
+      },
     ];
     input.onDidAccept(() => {
       input.hide();
@@ -238,6 +316,8 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
           this._series.ccs = series.ccs;
         } else if (item.label === "Tos") {
           this._series.tos = series.tos;
+        } else if (item.label === "Sent emails") {
+          this._series.previouslySent = series.previouslySent;
         }
       });
       if (input.selectedItems.length) {

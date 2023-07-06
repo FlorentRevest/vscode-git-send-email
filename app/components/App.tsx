@@ -6,6 +6,7 @@ import { ActionsSection } from "./ActionsSection";
 import { CoverLetterSection } from "./CoverLetterSection";
 import { EmailsSection } from "./EmailsSection";
 import { HeaderSection } from "./HeaderSection";
+import { PreviouslySentSection } from "./PreviouslySentSection";
 import { PatchesSection } from "./PatchesSection";
 import { SubjectSection } from "./SubjectSection";
 
@@ -70,6 +71,8 @@ export const App = () => {
         <VSCodeDivider />
 
         <ActionsSection hasCheckpatch={hasCheckpatch} />
+
+        <PreviouslySentSection series={series} />
       </>
     );
   } else {
