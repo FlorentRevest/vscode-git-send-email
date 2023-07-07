@@ -11,7 +11,7 @@ export function saveSeries(head: string, series: Series | undefined, context: Ex
 
 // Returns the Series for HEAD
 export function getSeries(head: string, context: ExtensionContext): Series {
-  let series: Series | undefined = context.workspaceState.get("git-send-email:series:" + head);
+  let series: any | undefined = context.workspaceState.get("git-send-email:series:" + head);
   if (!series || !head.length) {
     series = {
       prefix: defaultSubjectPrefix(),
@@ -22,6 +22,9 @@ export function getSeries(head: string, context: ExtensionContext): Series {
       nbPatches: 1,
       previouslySent: [],
     };
+  }
+  if (!("previouslySent" in series)) {
+    series.previouslySent = [];
   }
   return series;
 }
