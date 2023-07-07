@@ -14,6 +14,8 @@ This extension integrates VSCode with
 * Sanity-checking patches using a checkpatch script (if available)
 * Interactively adding Tos and Ccs from emails found in a MAINTAINERS file (if available)
 * Manually inspecting patches before sending
+* Easy interactive-rebase of the commits included in the series
+* Range-diffing across consecutive versions of a series
 * Switching between branches that hold remembered series
 * Sending series with `git send-email` (ultimately, you get to press the enter
   key if the command and patches looks good to you!)

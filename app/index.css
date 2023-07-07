@@ -88,6 +88,10 @@ vscode-divider {
 }
 
 #send-button {
-  margin-top: 20px;
+  width: 100%;
+}
+
+.action-flexbox {
+  margin-bottom: 10px;
   width: 100%;
 }

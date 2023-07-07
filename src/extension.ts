@@ -9,7 +9,7 @@ import {
 } from "./utilities/commands";
 import { sanitizeMaintainersEmail, getPossibleRecipients } from "./utilities/emails";
 import { maintainersPath, getMaintainerPath, checkpatchPath, archiveUrlPrefixToMessageId, openEmailsWithPatchwork } from "./utilities/config";
-import { getSeries, saveSeries, getCoverLetter, saveCoverLetter, getAllBranches } from "./utilities/database";
+import { getSeries, hasSeries, saveSeries, getCoverLetter, saveCoverLetter, getAllBranches } from "./utilities/database";
 import { workspaceHasFile } from "./utilities/workspace";
 import { getUri } from "./utilities/getUri";
 import * as vscode from "vscode";
@@ -128,6 +128,13 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
           break;
         case "forgetSentSeries":
           this.forgetSentSeries(message.number);
+          break;
+        case "rebase-i":
+          this.interactiveRebase();
+          break;
+        case "rangeDiff":
+          this.rangeDiff();
+          break;
       }
     });
   }
@@ -161,6 +168,33 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
         });
       }
     });
+  }
+
+  // Let the user rework the current series
+  private interactiveRebase() {
+    let terminal = vscode.window.createTerminal("interactive rebase");
+    terminal.show();
+    const command = 'git rebase -i HEAD' + "~".repeat(this._series.nbPatches);
+    setTimeout(() => terminal.sendText(command, true), 1000);
+  }
+
+  // Diff the current series with its previous version
+  private async rangeDiff() {
+    const prevHead = this.previousHead();
+
+    if (!await this.hasPreviousVersion()) {
+      vscode.window.showErrorMessage("No series remembered for " + prevHead);
+      return;
+    }
+
+    const prevSeries = getSeries(prevHead, this._context);
+    const previousRange = prevHead + "~".repeat(prevSeries.nbPatches) + ".." + prevHead;
+    const currentRange = "HEAD" + "~".repeat(this._series.nbPatches) + "..HEAD";
+    const command = "git range-diff " + previousRange + " " + currentRange;
+
+    let terminal = vscode.window.createTerminal("range-diff");
+    terminal.show();
+    setTimeout(() => terminal.sendText(command, true), 1000);
   }
 
   // Create a series and run checkpatch against it in a terminal
@@ -378,22 +412,49 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
     input.show();
   }
 
-  // Copy the current git branch and bump the version number
-  private async bump() {
+  // Return whether a series is remembered for the branch of the previous version of this series
+  private async hasPreviousVersion(): Promise<boolean> {
+    const prevHead = this.previousHead();
+    return hasSeries(prevHead, this._context) && (await this._repo?.getBranch(prevHead) !== undefined);
+  }
+
+  // Return the branch name for version v-1
+  private previousHead() {
+    let currentSuffix = "-v" + this._series.version;
+    let newSuffix = "-v" + (this._series.version - 1);
+    if (newSuffix === "-v1") {
+      newSuffix = "";
+    }
+
+    let ret = this._head.substring(0, this._head.length - currentSuffix.length) + newSuffix;
+    if (!this._head.endsWith(currentSuffix)) {
+      ret = this._head + newSuffix;
+    }
+
+    return ret;
+  }
+
+  // Return the branch name for version v+1
+  private nextHead() {
     let currentSuffix = "-v" + this._series.version;
     let newSuffix = "-v" + (this._series.version + 1);
 
-    let newHead = this._head.substring(0, this._head.length - currentSuffix.length) + newSuffix;
+    let ret = this._head.substring(0, this._head.length - currentSuffix.length) + newSuffix;
     if (!this._head.endsWith(currentSuffix)) {
-      newHead = this._head + newSuffix;
+      ret = this._head + newSuffix;
     }
+
+    return ret;
+  }
+
+  // Copy the current git branch and bump the version number
+  private async bump() {
+    const newHead = this.nextHead();
 
     this._repo
       ?.getBranch(newHead)
-      .then(() => {
-        vscode.window.showErrorMessage("The branch " + newHead + " already exists!");
-        return;
-      })
+      .then(() =>
+        vscode.window.showErrorMessage("The branch " + newHead + " already exists!"))
       .catch(() => {
         let newSeries = {
           ...this._series
@@ -497,6 +558,7 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
         hasGetMaintainer: workspaceHasFile(getMaintainerPath()),
         hasCheckpatch: workspaceHasFile(checkpatchPath()),
         hasMaintainers: workspaceHasFile(maintainersPath()),
+        hasPreviousVersion: await this.hasPreviousVersion(),
       });
     }
   }

@@ -17,7 +17,7 @@ export const PreviouslySentSection = ({ series }: { series: Series }) => {
         </h4>
 
         {series.previouslySent.map((sentSeries, i) =>
-          <>
+          <div key={i}>
             <div id="flexbox">
               <label
                 className="max-width"
@@ -47,7 +47,7 @@ export const PreviouslySentSection = ({ series }: { series: Series }) => {
                 </li>
               ))}
             </ul>
-          </>
+          </div>
         )}
       </>
     );

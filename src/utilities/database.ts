@@ -29,6 +29,11 @@ export function getSeries(head: string, context: ExtensionContext): Series {
   return series;
 }
 
+// Returns whether a Series exists for head
+export function hasSeries(head: string, context: ExtensionContext): boolean {
+  return context.workspaceState.keys().indexOf("git-send-email:series:" + head) !== -1;
+}
+
 // Returns all branches tracked in the database
 export function getAllBranches(context: ExtensionContext): Array<string> {
   let branches: Array<string> = [];

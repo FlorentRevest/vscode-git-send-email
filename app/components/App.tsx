@@ -18,6 +18,7 @@ export const App = () => {
   const [hasGetMaintainer, setHasGetMaintainer] = useState<boolean>(false);
   const [hasCheckpatch, setHasCheckpatch] = useState<boolean>(false);
   const [hasMaintainers, setHasMaintainers] = useState<boolean>(false);
+  const [hasPreviousVersion, setHasPreviousVersion] = useState<boolean>(false);
 
   // We can only be populated after the webview is alive
   const handleMessagesFromExtension = useCallback((event: MessageEvent) => {
@@ -29,6 +30,7 @@ export const App = () => {
       setHasGetMaintainer(event.data.hasGetMaintainer);
       setHasCheckpatch(event.data.hasCheckpatch);
       setHasMaintainers(event.data.hasMaintainers);
+      setHasPreviousVersion(event.data.hasPreviousVersion);
     }
   }, []);
 
@@ -70,7 +72,7 @@ export const App = () => {
         />
         <VSCodeDivider />
 
-        <ActionsSection hasCheckpatch={hasCheckpatch} />
+        <ActionsSection hasCheckpatch={hasCheckpatch} hasPreviousVersion={hasPreviousVersion} />
 
         <PreviouslySentSection series={series} />
       </>
