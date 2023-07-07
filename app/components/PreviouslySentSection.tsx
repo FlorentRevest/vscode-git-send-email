@@ -38,7 +38,7 @@ export const PreviouslySentSection = ({ series }: { series: Series }) => {
             <ul>
               {sentSeries.emails.map((email, j) => (
                 <li
-                  key={i}
+                  key={j}
                   className="clickable"
                   onClick={() => {
                     vscode.postMessage({ command: "openEmail", messageId: email.messageId });
