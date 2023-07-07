@@ -54,6 +54,10 @@ li {
   font-size: calc(var(--vscode-font-size) * 0.9)
 }
 
+li:hover {
+  filter: brightness(130%);
+}
+
 .clickable {
   cursor: pointer;
 }
