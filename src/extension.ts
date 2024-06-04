@@ -1,6 +1,7 @@
 import { ExtensionContext } from "vscode";
 import * as child_process from "child_process";
 import * as fs from "fs";
+import * as os from "os";
 import {
   gitFormatPatch,
   checkpatchCommand,
@@ -257,7 +258,7 @@ export class SeriesViewProvider implements vscode.WebviewViewProvider {
     let terminal = vscode.window.createTerminal({
       name: "git send-email",
       shellPath: "/usr/bin/script",
-      shellArgs: ["-f", "-q", pipe],
+      shellArgs: [os.platform() === "linux" ? "-f" : "-F", "-q", pipe],
     });
     terminal.show();
     setTimeout(() => terminal.sendText(sendEmailCommand(this._series, patches), false), 1000);
